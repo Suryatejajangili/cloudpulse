@@ -1,53 +1,80 @@
 /**
  * CloudPulse — Cloudflare Worker Entry Point
  *
- * This is the main request router. All HTTP requests arrive here first.
- * The router will be expanded in later phases to wire in:
- *   - POST /api/events        → eventsHandler
- *   - GET  /api/analytics/*   → analyticsHandler
- *   - GET  /api/health        → healthHandler
- *   - Everything else         → static assets (public/)
+ * Request flow:
+ *   1. CORS preflight (OPTIONS) → handled immediately, no auth/DB touched.
+ *   2. /api/health              → healthHandler
+ *   3. /api/events   (POST)     → eventsHandler
+ *   4. /api/analytics/summary   → summaryHandler
+ *   5. /api/analytics/pages     → pagesHandler
+ *   6. /api/analytics/daily     → dailyHandler
+ *   7. /api/analytics/recent    → recentHandler
+ *   8. /api/*        (unknown)  → 404
+ *   9. Everything else          → static assets served from ./public
  *
- * Phase 1: Minimal scaffold — health check only, confirms the Worker
- * compiles and runs correctly under wrangler dev.
+ * Handlers receive corsHeaders already built — they never construct them
+ * directly, ensuring consistent CORS behaviour across all routes.
  */
 
 import type { Env } from "./types";
+import { getConfig } from "./config";
+import { buildCorsHeaders, handlePreflight } from "./utils/cors";
+import { methodNotAllowed, notFound } from "./utils/errors";
+import { healthHandler } from "./handlers/healthHandler";
+import { eventsHandler } from "./handlers/eventsHandler";
+import {
+  analyticsNotFound,
+  dailyHandler,
+  pagesHandler,
+  recentHandler,
+  summaryHandler,
+} from "./handlers/analyticsHandler";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
+    const cfg = getConfig(env);
+    const origin = request.headers.get("Origin");
+    const cors = buildCorsHeaders(origin, cfg.allowedOrigins);
 
-    // ── Phase 1 placeholder routing ────────────────────────────────────────
-    // Full routing will be implemented in Phase 5 (API Handlers).
-    if (url.pathname === "/api/health") {
-      return new Response(
-        JSON.stringify({
-          status: "ok",
-          service: "cloudpulse",
-          environment: env.ENVIRONMENT ?? "unknown",
-          timestamp: new Date().toISOString(),
-          version: "0.1.0",
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    // ── CORS preflight ────────────────────────────────────────────────────
+    const preflight = handlePreflight(request, cfg.allowedOrigins);
+    if (preflight) return preflight;
+
+    const url = new URL(request.url);
+    const { pathname } = url;
+    const method = request.method;
+
+    // ── API routes ────────────────────────────────────────────────────────
+    if (pathname.startsWith("/api/")) {
+      // Health
+      if (pathname === "/api/health") {
+        return healthHandler(request, env, cors);
+      }
+
+      // Event ingestion
+      if (pathname === "/api/events") {
+        if (method !== "POST") return methodNotAllowed(cors);
+        return eventsHandler(request, env, cors);
+      }
+
+      // Analytics — all GET only
+      if (pathname.startsWith("/api/analytics/")) {
+        if (method !== "GET") return methodNotAllowed(cors);
+
+        if (pathname === "/api/analytics/summary") return summaryHandler(request, env, cors);
+        if (pathname === "/api/analytics/pages")   return pagesHandler(request, env, cors);
+        if (pathname === "/api/analytics/daily")   return dailyHandler(request, env, cors);
+        if (pathname === "/api/analytics/recent")  return recentHandler(request, env, cors);
+
+        return analyticsNotFound(cors);
+      }
+
+      // Unknown /api/* path
+      return notFound(cors);
     }
 
-    // Temporary catch-all during scaffold phase.
-    // Will be replaced by static asset serving + full API routing.
-    return new Response(
-      JSON.stringify({
-        error: "CloudPulse API — Phase 1 Scaffold",
-        message: "Full routing not yet implemented. Check /api/health",
-        path: url.pathname,
-      }),
-      {
-        status: 501,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    // ── Static assets (dashboard, tracker.js, CSS, JS) ───────────────────
+    // Wrangler's ASSETS binding serves files from ./public automatically.
+    return env.ASSETS.fetch(request);
   },
 } satisfies ExportedHandler<Env>;

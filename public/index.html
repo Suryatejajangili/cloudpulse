@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudPulse — Serverless Website Analytics</title>
+  <link rel="stylesheet" href="/assets/css/dashboard.css">
+  <!-- Chart.js for responsive data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="/assets/js/dashboard.js" defer></script>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-spinner" class="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="brand-logo">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <span>CloudPulse</span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#overview" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Overview</span>
+      </a>
+      <a href="#traffic-trends" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+          <polyline points="17 6 23 6 23 12"></polyline>
+        </svg>
+        <span>Traffic Trends</span>
+      </a>
+      <a href="#page-breakdown" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span>Top Pages</span>
+      </a>
+      <a href="#recent-events" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Live Events</span>
+      </a>
+      <a href="#integration" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span>Integration</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        <span id="system-health-status">Checking API...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="main-wrapper">
+    <header class="top-bar">
+      <div class="page-title">Analytics Dashboard</div>
+      
+      <div class="top-controls">
+        <!-- Date-Range Filter -->
+        <div class="date-filter-group">
+          <label for="filter-from">From</label>
+          <input type="date" id="filter-from" class="date-input">
+          <label for="filter-to">To</label>
+          <input type="date" id="filter-to" class="date-input">
+          <button id="btn-apply-filter" class="btn btn-primary" title="Apply filter">Apply</button>
+          <button id="btn-reset-filter" class="btn btn-secondary" title="Reset filter">Reset</button>
+        </div>
+
+        <!-- Refresh Button -->
+        <button id="btn-refresh" class="btn btn-secondary" title="Refresh analytics">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <!-- Error Alert Banner -->
+      <div id="error-banner" class="alert-error"></div>
+
+      <!-- Metrics Summary Cards -->
+      <section id="overview" class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Total Page Views</span>
+            <span class="metric-badge">All Time</span>
+          </div>
+          <div id="metric-total-views" class="metric-value">—</div>
+          <div class="metric-sub">Across all tracked paths</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Unique Visitors</span>
+            <span class="metric-badge">Distinct</span>
+          </div>
+          <div id="metric-unique-visitors" class="metric-value">—</div>
+          <div class="metric-sub">COUNT(DISTINCT visitor_id)</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Today's Page Views</span>
+            <span class="metric-badge live">Today (UTC)</span>
+          </div>
+          <div id="metric-today-views" class="metric-value">—</div>
+          <div class="metric-sub">Current UTC calendar day</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Today's Unique Visitors</span>
+            <span class="metric-badge live">Today (UTC)</span>
+          </div>
+          <div id="metric-today-visitors" class="metric-value">—</div>
+          <div class="metric-sub">Distinct visitors today</div>
+        </div>
+      </section>
+
+      <!-- Charts Section -->
+      <section id="traffic-trends" class="charts-grid">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Daily Traffic Trends (30 Days)</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="daily-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Traffic by Top Pages</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="pages-chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tables Section -->
+      <section class="tables-grid">
+        <!-- Page-wise Traffic Statistics -->
+        <div id="page-breakdown" class="card">
+          <div class="card-header">
+            <span class="card-title">Page-wise Traffic Breakdown</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Page Path</th>
+                  <th>Views</th>
+                  <th>Unique Visitors</th>
+                  <th>Share</th>
+                </tr>
+              </thead>
+              <tbody id="pages-table-body">
+                <tr><td colspan="4" class="empty-state">Loading page data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Visitor Events -->
+        <div id="recent-events" class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Visitor Events</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Timestamp (UTC)</th>
+                  <th>Path</th>
+                  <th>Referrer</th>
+                </tr>
+              </thead>
+              <tbody id="events-table-body">
+                <tr><td colspan="3" class="empty-state">Loading recent events...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tracker Integration Guide -->
+      <section id="integration" class="snippet-card">
+        <div class="card-title">Embed CloudPulse on your Website</div>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">
+          Add this lightweight snippet into your website's HTML <code>&lt;head&gt;</code> or before the closing <code>&lt;/body&gt;</code> tag.
+          It automatically generates an anonymous visitor token and records page views without collecting any PII.
+        </p>
+        <div class="snippet-box">
+          <code id="tracker-snippet-code" class="snippet-code">&lt;script src="/tracker.js" defer&gt;&lt;/script&gt;</code>
+          <button id="btn-copy-snippet" class="btn btn-secondary">Copy Snippet</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+</body>
+</html>

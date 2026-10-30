@@ -1,6 +1,7 @@
 {
   "name": "cloudpulse",
   "version": "0.1.0",
+  "type": "module",
   "description": "CloudPulse — Serverless Website Analytics Platform built on Cloudflare Workers + D1",
   "private": true,
   "engines": {

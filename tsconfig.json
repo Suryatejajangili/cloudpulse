@@ -13,7 +13,10 @@
     // We use the Cloudflare Workers runtime types (D1Database, Request, etc.)
     // instead of the default DOM/Node types.
     "lib": ["ES2022"],
-    "types": ["@cloudflare/workers-types"],
+    "types": [
+      "@cloudflare/workers-types",
+      "@cloudflare/vitest-plugin/types"
+    ],
 
     // ── Strictness ───────────────────────────────────────────────────────────
     "strict": true,
@@ -46,3 +49,4 @@
     ".wrangler"
   ]
 }
+
