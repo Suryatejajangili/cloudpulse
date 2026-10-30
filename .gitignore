@@ -1,0 +1,35 @@
+# === Dependencies ===
+node_modules/
+
+# === Wrangler local state (local D1 DB, KV, etc.) ===
+.wrangler/
+
+# === TypeScript build output ===
+dist/
+
+# === Environment secrets — NEVER commit these ===
+.env
+.env.local
+.env.*.local
+.dev.vars
+
+# === Cloudflare secrets file (wrangler secret) ===
+*.secret
+
+# === OS artifacts ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Editor ===
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# === Test coverage ===
+coverage/
+
+# === Logs ===
+*.log
+npm-debug.log*

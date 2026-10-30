@@ -1,0 +1,62 @@
+{
+  /**
+   * CloudPulse — Cloudflare Worker Configuration
+   * Format: wrangler.jsonc (JSONC = JSON with Comments)
+   *
+   * IMPORTANT: This file configures the local development environment only.
+   * The `database_id` below is a local-dev placeholder.
+   * A real Cloudflare D1 database_id will be added ONLY after you create the
+   * remote database with: wrangler d1 create cloudpulse-db
+   * (which requires your explicit approval before running).
+   */
+
+  // ── Worker identity ────────────────────────────────────────────────────────
+  "name": "cloudpulse",
+  "main": "src/index.ts",
+
+  // Compatibility date pins which CF runtime behaviours are active.
+  // Always use a date that is already in the past.
+  "compatibility_date": "2025-01-01",
+
+  // nodejs_compat exposes a subset of Node.js built-ins inside the Worker.
+  // We enable it now so future utility imports (e.g. crypto) work without
+  // a config change.
+  "compatibility_flags": ["nodejs_compat"],
+
+  // ── Static Assets ──────────────────────────────────────────────────────────
+  // Wrangler 4.x serves the /public directory as static assets automatically.
+  // The Worker handles /api/* routes; everything else falls through to assets.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  // ── D1 Database binding ────────────────────────────────────────────────────
+  // "binding" is the variable name used inside Worker code: env.DB
+  // "database_name" matches the name you will create on Cloudflare.
+  // "database_id" is a local-dev placeholder UUID — replaced after creation.
+  // "migrations_dir" tells Wrangler where to find SQL migration files.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cloudpulse-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // ── Environment variables (non-secret) ────────────────────────────────────
+  // Secrets (e.g. API keys) must be set via: wrangler secret put <NAME>
+  // Never put secrets in this file.
+  "vars": {
+    "ENVIRONMENT": "development",
+    "ALLOWED_ORIGINS": "*"
+  },
+
+  // ── Local development overrides ───────────────────────────────────────────
+  // These only apply when running `wrangler dev` locally.
+  "dev": {
+    "port": 8787,
+    "local_protocol": "http"
+  }
+}

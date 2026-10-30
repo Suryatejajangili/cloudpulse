@@ -1,0 +1,48 @@
+{
+  "compilerOptions": {
+    // ── Target & Module ──────────────────────────────────────────────────────
+    // ES2022 gives us top-level await, class fields, and Error.cause — all
+    // supported in Cloudflare's V8 isolate runtime.
+    "target": "ES2022",
+    "module": "ES2022",
+    // "bundler" resolution matches how Wrangler's esbuild resolver works.
+    // It handles bare imports (from node_modules) and relative imports alike.
+    "moduleResolution": "bundler",
+
+    // ── Type Library ─────────────────────────────────────────────────────────
+    // We use the Cloudflare Workers runtime types (D1Database, Request, etc.)
+    // instead of the default DOM/Node types.
+    "lib": ["ES2022"],
+    "types": ["@cloudflare/workers-types"],
+
+    // ── Strictness ───────────────────────────────────────────────────────────
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // ── Interop ──────────────────────────────────────────────────────────────
+    // skipLibCheck avoids type errors in node_modules declaration files,
+    // which are out of our control.
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+
+    // ── Output ───────────────────────────────────────────────────────────────
+    // Wrangler's esbuild handles the actual bundling — we only use tsc for
+    // type-checking (tsc --noEmit). No output directory needed.
+    "noEmit": true
+  },
+
+  // Include both source and test files in type checking.
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "public",
+    ".wrangler"
+  ]
+}
