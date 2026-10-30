@@ -42,10 +42,11 @@
   ],
 
   // ── Environment variables (non-secret) ────────────────────────────────────
-  // Secrets (e.g. API keys) must be set via: wrangler secret put <NAME>
-  // Never put secrets in this file.
+  // Deployed production environment variables.
+  // For local development overrides, use .dev.vars (ignored by Git).
+  // Production secrets (ANALYTICS_API_KEY) must be set via: wrangler secret put <NAME>
   "vars": {
-    "ENVIRONMENT": "development",
+    "ENVIRONMENT": "production",
     "ALLOWED_ORIGINS": "*"
   },
 
