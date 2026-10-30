@@ -3,11 +3,7 @@
    * CloudPulse — Cloudflare Worker Configuration
    * Format: wrangler.jsonc (JSONC = JSON with Comments)
    *
-   * IMPORTANT: This file configures the local development environment only.
-   * The `database_id` below is a local-dev placeholder.
-   * A real Cloudflare D1 database_id will be added ONLY after you create the
-   * remote database with: wrangler d1 create cloudpulse-db
-   * (which requires your explicit approval before running).
+   * Remote D1 Database: cloudpulse-db (341ca211-52c0-4d1c-ba02-46564226faf6, APAC)
    */
 
   // ── Worker identity ────────────────────────────────────────────────────────
@@ -33,14 +29,14 @@
 
   // ── D1 Database binding ────────────────────────────────────────────────────
   // "binding" is the variable name used inside Worker code: env.DB
-  // "database_name" matches the name you will create on Cloudflare.
-  // "database_id" is a local-dev placeholder UUID — replaced after creation.
+  // "database_name" matches the D1 database name on Cloudflare.
+  // "database_id" is the remote Cloudflare D1 database ID.
   // "migrations_dir" tells Wrangler where to find SQL migration files.
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "cloudpulse-db",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "341ca211-52c0-4d1c-ba02-46564226faf6",
       "migrations_dir": "migrations"
     }
   ],
