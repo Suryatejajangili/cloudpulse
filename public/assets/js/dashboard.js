@@ -36,16 +36,44 @@
     loadingSpinner: document.getElementById("loading-spinner"),
     healthStatus: document.getElementById("system-health-status"),
     snippetCode: document.getElementById("tracker-snippet-code"),
-    btnCopySnippet: document.getElementById("btn-copy-snippet")
+    btnCopySnippet: document.getElementById("btn-copy-snippet"),
+    btnApiKey: document.getElementById("btn-api-key")
   };
 
+  var API_KEY_STORAGE = "cp_api_key";
+  function getApiKey() {
+    return localStorage.getItem(API_KEY_STORAGE) || "";
+  }
+  function setApiKey(key) {
+    if (key && key.trim()) {
+      localStorage.setItem(API_KEY_STORAGE, key.trim());
+    } else {
+      localStorage.removeItem(API_KEY_STORAGE);
+    }
+  }
+
   /**
-   * Helper: safe JSON fetch
+   * Helper: safe JSON fetch with optional Auth header
    */
   async function fetchJson(endpoint) {
-    var res = await fetch(endpoint, {
-      headers: { Accept: "application/json" }
-    });
+    var headers = { Accept: "application/json" };
+    var key = getApiKey();
+    if (key) {
+      headers["Authorization"] = "Bearer " + key;
+    }
+
+    var res = await fetch(endpoint, { headers: headers });
+
+    // Handle 401 Unauthorized seamlessly
+    if (res.status === 401) {
+      var entered = prompt("CloudPulse Analytics is protected. Please enter your API Key:");
+      if (entered) {
+        setApiKey(entered);
+        headers["Authorization"] = "Bearer " + entered.trim();
+        res = await fetch(endpoint, { headers: headers });
+      }
+    }
+
     if (!res.ok) {
       var errData;
       try {
@@ -391,6 +419,17 @@
         state.dateRange.from = "";
         state.dateRange.to = "";
         refreshDashboard();
+      });
+    }
+
+    if (elements.btnApiKey) {
+      elements.btnApiKey.addEventListener("click", function () {
+        var currentKey = getApiKey();
+        var key = prompt("Enter CloudPulse Analytics API Key (leave empty to clear):", currentKey);
+        if (key !== null) {
+          setApiKey(key);
+          refreshDashboard();
+        }
       });
     }
   }

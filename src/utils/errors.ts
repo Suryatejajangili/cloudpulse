@@ -27,6 +27,14 @@ export function clientError(
   return json(body, 400, extra);
 }
 
+export function unauthorized(extra: ExtraHeaders = {}): Response {
+  return json(
+    { success: false, error: "Unauthorized: Invalid or missing API key" } satisfies ApiError,
+    401,
+    extra
+  );
+}
+
 export function notFound(extra: ExtraHeaders = {}): Response {
   return json({ success: false, error: "API endpoint not found" } satisfies ApiError, 404, extra);
 }

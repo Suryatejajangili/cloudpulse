@@ -19,7 +19,8 @@
 import type { Env } from "./types";
 import { getConfig } from "./config";
 import { buildCorsHeaders, handlePreflight } from "./utils/cors";
-import { methodNotAllowed, notFound } from "./utils/errors";
+import { methodNotAllowed, notFound, unauthorized } from "./utils/errors";
+import { isAuthorized } from "./utils/auth";
 import { healthHandler } from "./handlers/healthHandler";
 import { eventsHandler } from "./handlers/eventsHandler";
 import {
@@ -57,9 +58,10 @@ export default {
         return eventsHandler(request, env, cors);
       }
 
-      // Analytics — all GET only
+      // Analytics — all GET only; protected by API key if configured
       if (pathname.startsWith("/api/analytics/")) {
         if (method !== "GET") return methodNotAllowed(cors);
+        if (!isAuthorized(request, env)) return unauthorized(cors);
 
         if (pathname === "/api/analytics/summary") return summaryHandler(request, env, cors);
         if (pathname === "/api/analytics/pages")   return pagesHandler(request, env, cors);

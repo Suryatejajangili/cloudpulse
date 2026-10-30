@@ -9,6 +9,7 @@ export interface Env {
   ASSETS: Fetcher;
   ENVIRONMENT: string;
   ALLOWED_ORIGINS: string;
+  ANALYTICS_API_KEY?: string;
 }
 
 // ── Domain: Date Range Filter ──────────────────────────────────────────────

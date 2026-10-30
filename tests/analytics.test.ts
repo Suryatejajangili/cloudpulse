@@ -197,4 +197,71 @@ describe("Analytics Endpoints", () => {
       expect(body.error).toBe("Internal server error");
     });
   });
+
+  describe("Authentication Protection for Analytics Endpoints", () => {
+    const authEnv = {
+      ...testEnv,
+      ANALYTICS_API_KEY: "secret-test-token-xyz",
+    };
+
+    it("should return 401 Unauthorized when API key is required but missing", async () => {
+      const req = new Request("http://localhost:8787/api/analytics/summary");
+      const res = await worker.fetch(req, authEnv);
+      expect(res.status).toBe(401);
+
+      const body = (await res.json()) as any;
+      expect(body.success).toBe(false);
+      expect(body.error).toContain("Unauthorized");
+    });
+
+    it("should return 401 when provided API key is invalid", async () => {
+      const req = new Request("http://localhost:8787/api/analytics/summary", {
+        headers: { "X-API-Key": "wrong-token" },
+      });
+      const res = await worker.fetch(req, authEnv);
+      expect(res.status).toBe(401);
+    });
+
+    it("should allow access with valid Authorization Bearer token", async () => {
+      const req = new Request("http://localhost:8787/api/analytics/summary", {
+        headers: { Authorization: "Bearer secret-test-token-xyz" },
+      });
+      const res = await worker.fetch(req, authEnv);
+      expect(res.status).toBe(200);
+
+      const body = (await res.json()) as any;
+      expect(body.success).toBe(true);
+    });
+
+    it("should allow access with valid X-API-Key header", async () => {
+      const req = new Request("http://localhost:8787/api/analytics/recent", {
+        headers: { "X-API-Key": "secret-test-token-xyz" },
+      });
+      const res = await worker.fetch(req, authEnv);
+      expect(res.status).toBe(200);
+
+      const body = (await res.json()) as any;
+      expect(body.success).toBe(true);
+    });
+
+    it("should keep POST /api/events public even when ANALYTICS_API_KEY is configured", async () => {
+      const req = new Request("http://localhost:8787/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          visitor_id: "public-tracker-user",
+          page_path: "/public-page",
+          referrer: "",
+        }),
+      });
+      const res = await worker.fetch(req, authEnv);
+      expect(res.status).toBe(201);
+    });
+
+    it("should keep GET /api/health public without auth", async () => {
+      const req = new Request("http://localhost:8787/api/health");
+      const res = await worker.fetch(req, authEnv);
+      expect(res.status).toBe(200);
+    });
+  });
 });

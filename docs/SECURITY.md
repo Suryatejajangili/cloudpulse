@@ -43,6 +43,15 @@
 
 ## 3. Rate Limiting & Abuse Mitigation
 
+### 1.6 Authentication for Analytics Read Endpoints
+- Ingestion (`POST /api/events`) remains public and unauthenticated so that the embeddable `tracker.js` script can send telemetry beacons from arbitrary client browsers.
+- Analytics endpoints (`GET /api/analytics/*`) support API key protection via the `ANALYTICS_API_KEY` secret or environment variable.
+- When `ANALYTICS_API_KEY` is configured, requests must supply a valid token via either:
+  - `Authorization: Bearer <ANALYTICS_API_KEY>`
+  - `X-API-Key: <ANALYTICS_API_KEY>`
+- Unauthenticated requests receive `HTTP 401 Unauthorized`.
+- If `ANALYTICS_API_KEY` is not set or empty, requests are permitted (suitable for initial local development).
+
 ### Current Edge Protections
 - Cloudflare automatically provides DDoS mitigation and L3/L4 attack filtering for all Workers routes.
 - The `POST /api/events` endpoint rejects non-JSON payloads, missing headers, and malformed bodies with zero DB interactions.

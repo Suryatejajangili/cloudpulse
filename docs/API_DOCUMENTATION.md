@@ -66,6 +66,10 @@ Receives a page-view telemetry event from the client tracking snippet and stores
 
 ## 2. Analytics Endpoints
 
+Analytics query endpoints (`/api/analytics/*`) require authentication when `ANALYTICS_API_KEY` is configured in the environment:
+- Header: `Authorization: Bearer <API_KEY>` or `X-API-Key: <API_KEY>`
+- Unauthenticated requests return `401 Unauthorized`
+
 ### `GET /api/analytics/summary`
 Returns aggregate traffic metrics.
 
