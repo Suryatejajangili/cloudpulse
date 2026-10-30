@@ -97,3 +97,4 @@ Requires explicit user approval and a valid Cloudflare account login:
 npm run db:migrate:remote
 # Underling command: npx wrangler d1 migrations apply cloudpulse-db --remote
 ```
+

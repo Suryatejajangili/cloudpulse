@@ -165,3 +165,4 @@ CloudPulse was architected so that the data layer can migrate to **AWS Lambda + 
 - [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md) — REST API specification, request/response examples
 - [`docs/SECURITY.md`](docs/SECURITY.md) — Privacy principles, CORS, sanitization, rate limiting
 - [`docs/AWS_MIGRATION.md`](docs/AWS_MIGRATION.md) — Step-by-step AWS Lambda & DynamoDB migration blueprint
+

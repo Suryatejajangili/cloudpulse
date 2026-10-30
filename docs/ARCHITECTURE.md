@@ -101,3 +101,4 @@ CloudPulse enforces clean separation of concerns to avoid vendor lock-in:
    - The tracking client generates a random UUID v4 stored in `localStorage`.
    - The backend validates that visitor IDs conform strictly to `/^[a-zA-Z0-9_-]{8,64}$/`. Any payload attempting to send an email or personal token is rejected.
    - Visitor IDs are never exposed in public query responses (e.g. `/api/analytics/recent`).
+

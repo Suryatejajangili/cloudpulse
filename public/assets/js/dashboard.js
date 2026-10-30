@@ -400,5 +400,11 @@
     setupSnippet();
     initListeners();
     refreshDashboard();
+
+    // When tracker records a page visit, refresh the dashboard metrics
+    window.addEventListener("cloudpulse:tracked", function () {
+      refreshDashboard();
+    });
   });
 })();
+

@@ -17,6 +17,9 @@
 
   var STORAGE_KEY = "cp_vid";
 
+  // Capture script element at parse/execution time when document.currentScript is guaranteed
+  var scriptTag = document.currentScript || document.querySelector("script[src*='tracker.js']");
+
   /**
    * Generates a standard UUID v4 or high-entropy alphanumeric string
    * satisfying /^[a-zA-Z0-9_-]{8,64}$/
@@ -54,17 +57,25 @@
   }
 
   /**
-   * Resolves target API base URL from the currently executing script element.
-   * If hosted on https://analytics.example.com/tracker.js, target is https://analytics.example.com
+   * Resolves target API base URL.
+   * 1. Checks custom data-endpoint attribute if provided.
+   * 2. Resolves origin from script tag src (e.g. https://cloudpulse.domain.workers.dev/api/events).
+   * 3. Falls back to relative /api/events.
    */
   function getApiEndpoint() {
-    var script = document.currentScript || document.querySelector("script[src*='tracker.js']");
-    if (script && script.src) {
-      try {
-        var scriptUrl = new URL(script.src, window.location.href);
-        return scriptUrl.origin + "/api/events";
-      } catch (err) {
-        // fallback to relative path
+    var tag = scriptTag || document.querySelector("script[src*='tracker.js']");
+    if (tag) {
+      var customEndpoint = tag.getAttribute("data-endpoint");
+      if (customEndpoint) {
+        return customEndpoint;
+      }
+      if (tag.src) {
+        try {
+          var scriptUrl = new URL(tag.src, window.location.href);
+          return scriptUrl.origin + "/api/events";
+        } catch (err) {
+          // fallback
+        }
       }
     }
     return "/api/events";
@@ -72,12 +83,13 @@
 
   /**
    * Dispatches a page-view event to CloudPulse backend.
+   * Returns a Promise that resolves when the event request completes.
    */
-  function trackPageView() {
+  function trackPageView(customPath) {
     try {
       var payload = {
         visitor_id: getVisitorId(),
-        page_path: window.location.pathname || "/",
+        page_path: customPath || window.location.pathname || "/",
         referrer: document.referrer || ""
       };
 
@@ -85,7 +97,7 @@
       var serialized = JSON.stringify(payload);
 
       if (typeof fetch === "function") {
-        fetch(endpoint, {
+        return fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -94,22 +106,51 @@
           keepalive: true,
           mode: "cors",
           credentials: "omit"
-        }).catch(function () {
-          // Fail silently to never interfere with host site execution
-        });
+        })
+          .then(function (res) {
+            if (res.ok) {
+              // Dispatch event so host applications (like the dashboard) can react
+              try {
+                window.dispatchEvent(
+                  new CustomEvent("cloudpulse:tracked", { detail: payload })
+                );
+              } catch (evErr) {}
+            } else {
+              if (typeof console !== "undefined" && console.warn) {
+                console.warn("[CloudPulse] Tracking rejected:", res.status);
+              }
+            }
+            return res;
+          })
+          .catch(function (err) {
+            if (typeof console !== "undefined" && console.warn) {
+              console.warn("[CloudPulse] Tracking failed:", err);
+            }
+          });
       } else if (navigator.sendBeacon) {
         var blob = new Blob([serialized], { type: "application/json" });
         navigator.sendBeacon(endpoint, blob);
       }
     } catch (err) {
-      // Fail silently
+      if (typeof console !== "undefined" && console.warn) {
+        console.warn("[CloudPulse] Tracker exception:", err);
+      }
     }
   }
+
+  // Expose public API for single-page apps or manual trigger
+  window.CloudPulse = {
+    track: trackPageView,
+    getVisitorId: getVisitorId,
+    getEndpoint: getApiEndpoint
+  };
 
   // Execute tracking when DOM is ready
   if (document.readyState === "complete" || document.readyState === "interactive") {
     trackPageView();
   } else {
-    document.addEventListener("DOMContentLoaded", trackPageView);
+    document.addEventListener("DOMContentLoaded", function () {
+      trackPageView();
+    });
   }
 })();

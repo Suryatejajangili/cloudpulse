@@ -90,3 +90,4 @@ When initiating the AWS deployment, use AWS Cloud Development Kit (AWS CDK) or A
 - Define `NodejsFunction` with ARM64 architecture (Graviton3) for cost efficiency.
 - Define `Table` with On-Demand Billing mode (Pay-Per-Request).
 - Configure S3 bucket with CloudFront Origin Access Control (OAC) for frontend assets.
+

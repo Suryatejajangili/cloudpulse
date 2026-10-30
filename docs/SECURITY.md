@@ -51,3 +51,4 @@
 1. **Analytics Endpoint Authentication**: Currently, `GET /api/analytics/*` endpoints are open for educational and demonstration purposes. In commercial production, protect `/api/analytics/*` with Cloudflare Access (Zero Trust) or JWT API bearer tokens.
 2. **Cloudflare WAF Rate Limiting**: On paid tiers or custom domains, configure Cloudflare Rate Limiting rules (e.g. 50 requests / 10 seconds per IP on `/api/events`).
 3. **Bot Mitigation**: Integrate Cloudflare Turnstile for CAPTCHA-free bot challenge verification on public endpoints.
+
